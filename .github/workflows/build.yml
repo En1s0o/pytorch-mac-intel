@@ -1,0 +1,128 @@
+name: Build PyTorch for macOS x64 (Intel)
+
+on:
+  workflow_dispatch:
+
+env:
+  PYTORCH_TAG: v2.11.0
+  PYTHON_VERSION: "3.11"          # PyTorch 2.11 推荐使用 3.10~3.12
+  MAX_JOBS: 6
+
+jobs:
+  build-pytorch:
+    runs-on: macos-15-intel        # Intel 专用 runner
+
+    steps:
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Get latest PyTorch tag (optional override)
+        id: get-tag
+        run: |
+          LATEST_TAG=$(gh release -R "pytorch/pytorch" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            LATEST_TAG="${{ env.PYTORCH_TAG }}"
+            echo "Failed to fetch latest tag, fallback to ${{ env.PYTORCH_TAG }}"
+          fi
+          echo "Using PyTorch tag: $LATEST_TAG"
+          echo "PYTORCH_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Checkout PyTorch source
+        uses: actions/checkout@v4
+        with:
+          repository: pytorch/pytorch
+          ref: ${{ env.PYTORCH_TAG }}
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Install system dependencies
+        run: |
+          brew install cmake ninja
+
+      - name: Install Python build dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+          # MKL 支持（Intel macOS 推荐）
+          python -m pip install mkl-static mkl-include
+
+      - name: Configure build environment
+        run: |
+          echo "========================================"
+          echo "Build configuration for macOS x86_64"
+          echo "========================================"
+
+          cat << EOF >> $GITHUB_ENV
+          BUILD_TEST=0
+          BUILD_TYPE=Release
+          DEBUG=0
+          USE_MPS=0
+          USE_CUDA=0
+          USE_ROCM=0
+          USE_MKL=1
+          USE_MKLDNN=1
+          USE_DISTRIBUTED=0
+          USE_NATIVE_ARCH=0
+          USE_FBGEMM=1
+          USE_QNNPACK=0
+          USE_XNNPACK=1
+          MAX_JOBS=${{ env.MAX_JOBS }}
+          MACOSX_DEPLOYMENT_TARGET=10.15
+          CMAKE_BUILD_PARALLEL_LEVEL=${{ env.MAX_JOBS }}
+          EOF
+
+      - name: Build PyTorch (develop mode first)
+        run: |
+          python setup.py develop
+
+      - name: Build distributable wheel
+        run: |
+          python setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
+
+      - name: Package build artifacts
+        run: |
+          # 查找生成的 wheel
+          WHEEL_FILE=$(ls dist/torch-*.whl | head -n 1)
+          echo "Wheel file: $WHEEL_FILE"
+
+          # 创建压缩包（包含 wheel + 简单说明）
+          mkdir -p artifacts
+          cp "$WHEEL_FILE" artifacts/
+          cp README.md artifacts/ 2>/dev/null || echo "No README" > artifacts/README.txt
+
+          cd artifacts
+          zip -r ../pytorch-${{ env.PYTORCH_TAG }}-macos-x64.zip .
+          cd ..
+
+          ls -lh pytorch-${{ env.PYTORCH_TAG }}-macos-x64.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-${{ env.PYTORCH_TAG }}-macos-x64
+          path: pytorch-${{ env.PYTORCH_TAG }}-macos-x64.zip
+          retention-days: 30
+          compression-level: 6
+
+      - name: Create GitHub Release (if triggered manually)
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pytorch-macos-x64-${{ env.PYTORCH_TAG }}
+          name: PyTorch ${{ env.PYTORCH_TAG }} for macOS Intel x64
+          body: |
+            Custom build of PyTorch ${{ env.PYTORCH_TAG }} for macOS x86_64 (Intel).
+            Built on GitHub Actions runner `macos-15-intel`.
+            - MPS: disabled
+            - CUDA/ROCm: disabled
+            - MKL + MKLDNN: enabled
+          files: pytorch-${{ env.PYTORCH_TAG }}-macos-x64.zip
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
