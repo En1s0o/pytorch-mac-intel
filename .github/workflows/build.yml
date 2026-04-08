@@ -10,16 +10,24 @@ jobs:
   pytorch_tag:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.get-tag.outputs.tag }}
+      pytorch_tag: ${{ steps.get-tag.outputs.pytorch_tag }}
+      torchvision_tag: ${{ steps.get-tag.outputs.torchvision_tag }}
     steps:
       - id: get-tag
         run: |
-          LATEST_TAG=$(gh release -R "pytorch/pytorch" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
+          PYTORCH_LATEST_TAG=$(gh release -R "pytorch/pytorch" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
           if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
             echo "Failed to fetch latest PyTorch tag from GitHub API. Exiting ..."
             exit 1
           fi
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "pytorch_tag=$PYTORCH_LATEST_TAG" >> $GITHUB_OUTPUT
+
+          TORCHVISION_LATEST_TAG=$(gh release -R "pytorch/vision" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "Failed to fetch latest TorchVision tag from GitHub API. Exiting ..."
+            exit 1
+          fi
+          echo "torchvision_tag=$TORCHVISION_LATEST_TAG" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -27,7 +35,8 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        #python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11"]
       fail-fast: false
 
     steps:
@@ -40,7 +49,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: pytorch/pytorch
-          ref: ${{ needs.pytorch_tag.outputs.tag }}
+          ref: ${{ needs.pytorch_tag.outputs.pytorch_tag }}
+          path: pytorch
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Checkout TorchVision source
+        uses: actions/checkout@v4
+        with:
+          repository: pytorch/vision
+          ref: ${{ needs.pytorch_tag.outputs.torchvision_tag }}
+          path: vision
           submodules: recursive
           fetch-depth: 1
 
@@ -51,8 +70,8 @@ jobs:
       - name: Install Python build dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install -r requirements.txt
-          python -m pip install mkl-static mkl-include
+          python -m pip install -r pytorch/requirements.txt
+          python -m pip install mkl-static mkl-include pillow numpy
 
       - name: Set build environment variables
         run: |
@@ -77,6 +96,12 @@ jobs:
           EOF
 
       - name: Build PyTorch
+        working-directory: ./pytorch
+        run: |
+          python setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
+
+      - name: Build TorchVision
+        working-directory: ./vision
         run: |
           python setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
 
@@ -85,8 +110,10 @@ jobs:
           python -c "
           import platform
           import torch
+          import torchvision
           print('Python version:', platform.python_version())
           print('Torch version:', torch.__version__)
+          print('TorchVision version:', torchvision.__version__)
           print('CUDA available:', torch.cuda.is_available())
           print('MPS available:', torch.backends.mps.is_available())
           print('Build successful!')
@@ -95,9 +122,10 @@ jobs:
       - name: Upload wheels as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: torch-macos-x86_64-py${{ matrix.python-version }}
+          name: pytorch-macos-x86_64-py${{ matrix.python-version }}
           path: |
-            dist/*.whl
+            pytorch/dist/*.whl
+            vision/dist/*.whl
           retention-days: 30
           if-no-files-found: error
 
@@ -109,15 +137,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: wheels
-          pattern: torch-*
+          pattern: pytorch-*
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: torch-${{ needs.pytorch_tag.outputs.tag }}-macos-x86_64
-          name: PyTorch ${{ needs.pytorch_tag.outputs.tag }} for macOS x86_64
+          tag_name: pytorch-${{ needs.pytorch_tag.outputs.pytorch_tag }}-torchvision-${{ needs.pytorch_tag.outputs.torchvision_tag }}-macos-x86_64
+          name: PyTorch ${{ needs.pytorch_tag.outputs.pytorch_tag }} + TorchVision ${{ needs.pytorch_tag.outputs.torchvision_tag }} for macOS x86_64
           body: |
-            Custom macOS x86_64 build of PyTorch ${{ needs.pytorch_tag.outputs.tag }}.
+            Custom macOS x86_64 build of PyTorch ${{ needs.pytorch_tag.outputs.pytorch_tag }} with TorchVision ${{ needs.pytorch_tag.outputs.torchvision_tag }}.
             - Built for Python 3.10, 3.11, 3.12, 3.13
             - CPU + MKL only (no CUDA/MPS)
           files: wheels/**/*
