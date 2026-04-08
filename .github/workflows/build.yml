@@ -16,14 +16,14 @@ jobs:
       - id: get-tag
         run: |
           PYTORCH_LATEST_TAG=$(gh release -R "pytorch/pytorch" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
-          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+          if [ -z "$PYTORCH_LATEST_TAG" ] || [ "$PYTORCH_LATEST_TAG" = "null" ]; then
             echo "Failed to fetch latest PyTorch tag from GitHub API. Exiting ..."
             exit 1
           fi
           echo "pytorch_tag=$PYTORCH_LATEST_TAG" >> $GITHUB_OUTPUT
 
           TORCHVISION_LATEST_TAG=$(gh release -R "pytorch/vision" list --limit 1 --json tagName -q ".[0].tagName" || echo "")
-          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+          if [ -z "$TORCHVISION_LATEST_TAG" ] || [ "$TORCHVISION_LATEST_TAG" = "null" ]; then
             echo "Failed to fetch latest TorchVision tag from GitHub API. Exiting ..."
             exit 1
           fi
@@ -32,6 +32,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   build:
+    needs: pytorch_tag
     runs-on: macos-15-intel
     strategy:
       matrix:
