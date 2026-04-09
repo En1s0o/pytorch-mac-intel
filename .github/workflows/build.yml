@@ -85,14 +85,10 @@ jobs:
           BUILD_TYPE=Release
           USE_MPS=1
           USE_CUDA=0
-          USE_CUDNN=0
           USE_ROCM=0
           USE_MKL=1
           USE_MKLDNN=1
           USE_OPENMP=1
-          USE_DISTRIBUTED=1
-          USE_GLOO=1
-          USE_NCCL=0
           USE_FBGEMM=1
           USE_QNNPACK=0
           USE_XNNPACK=1
