@@ -106,6 +106,7 @@ jobs:
         working-directory: ./vision
         run: |
           python setup.py bdist_wheel --plat-name=macosx_10_15_x86_64
+          python -m pip install dist/torchvision-*.whl --force-reinstall --no-deps
 
       - name: Verify installation
         run: |
