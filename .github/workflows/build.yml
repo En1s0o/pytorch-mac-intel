@@ -142,6 +142,7 @@ jobs:
         with:
           path: wheels
           pattern: pytorch-*
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
