@@ -36,8 +36,7 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        #python-version: ["3.10", "3.11", "3.12", "3.13"]
-        python-version: ["3.11"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
       fail-fast: false
 
     steps:
@@ -83,7 +82,7 @@ jobs:
           DEBUG=0
           BUILD_TEST=0
           BUILD_TYPE=Release
-          USE_MPS=1
+          USE_MPS=0
           USE_CUDA=0
           USE_ROCM=0
           USE_MKL=1
@@ -152,7 +151,7 @@ jobs:
           body: |
             Custom macOS x86_64 build of PyTorch ${{ needs.pytorch_tag.outputs.pytorch_tag }} with TorchVision ${{ needs.pytorch_tag.outputs.torchvision_tag }}.
             - Built for Python 3.10, 3.11, 3.12, 3.13
-            - CPU + MKL + MPS
+            - CPU + MKL only (no CUDA/MPS)
           files: wheels/**/*
           draft: false
           prerelease: false
