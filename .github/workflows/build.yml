@@ -36,7 +36,8 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        #python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11"]
       fail-fast: false
 
     steps:
@@ -65,7 +66,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew install cmake ninja
+          brew install cmake ninja libomp mkl
 
       - name: Install Python build dependencies
         run: |
@@ -75,23 +76,37 @@ jobs:
 
       - name: Set build environment variables
         run: |
+          LIBOMP_DIR=$(brew --prefix libomp)
+          MKL_DIR=$(brew --prefix mkl)
+
           cat << EOF >> $GITHUB_ENV
           MACOSX_DEPLOYMENT_TARGET=14.0
-          ATEN_CPU_CAPABILITY=avx2
-          USE_NATIVE_ARCH=0
           DEBUG=0
           BUILD_TEST=0
           BUILD_TYPE=Release
-          USE_MPS=0
-          USE_CUDA=0
-          USE_ROCM=0
-          USE_MKL=1
-          USE_MKLDNN=1
-          USE_OPENMP=1
-          USE_FBGEMM=1
-          USE_QNNPACK=0
-          USE_XNNPACK=1
+          USE_CUDA=OFF
+          USE_CUDNN=OFF
+          USE_ROCM=OFF
+          USE_MPS=ON
+          USE_MKL=ON
+          USE_MKLDNN=ON
+          USE_OPENMP=ON
+          USE_NNPACK=ON
+          USE_FBGEMM=ON
+          USE_QNNPACK=ON
+          USE_PYTORCH_QNNPACK=ON
+          USE_XNNPACK=ON
+          USE_COREML_DELEGATE=ON
+          USE_PYTORCH_METAL_EXPORT=ON
+          USE_MPI=OFF
+          USE_NCCL=OFF
+          USE_GFLAGS=OFF
+          USE_GLOG=OFF
+          USE_EXCEPTION_PTR=ON
           MAX_JOBS=${{ env.MAX_JOBS }}
+          OpenMP_ROOT=${LIBOMP_DIR}
+          MKLROOT=${MKL_DIR}
+          CMAKE_PREFIX_PATH=${MKL_DIR}
           CMAKE_BUILD_PARALLEL_LEVEL=${{ env.MAX_JOBS }}
           EOF
 
