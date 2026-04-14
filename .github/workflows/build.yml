@@ -156,6 +156,8 @@ jobs:
       - name: Build TorchVision
         working-directory: ./vision
         run: |
+          otool -l /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/torch/lib/libtorch_python.dylib | grep -A 20 "LC_RPATH"
+          otool -l /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/torch/lib/libtorch_cpu.dylib | grep -A 20 "LC_RPATH"
           python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
           python -m pip install dist/torchvision-*.whl --force-reinstall --no-deps
 
