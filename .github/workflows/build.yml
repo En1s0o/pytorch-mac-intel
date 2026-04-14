@@ -131,6 +131,8 @@ jobs:
           USE_EXCEPTION_PTR=ON
           OpenMP_ROOT=${LIBOMP_DIR}
           CMAKE_PREFIX_PATH="${MKLROOT}:${CMAKE_PREFIX_PATH}"
+          CMAKE_INSTALL_RPATH="@loader_path"
+          CMAKE_BUILD_WITH_INSTALL_RPATH=ON
           CMAKE_BUILD_PARALLEL_LEVEL=${{ env.MAX_JOBS }}
           MAX_JOBS=${{ env.MAX_JOBS }}
           EOF
@@ -140,6 +142,16 @@ jobs:
         run: |
           python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
           python -m pip install dist/torch-*.whl --force-reinstall --no-deps
+
+      - name: Upload wheels as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-macos-x86_64-py${{ matrix.python-version }}
+          path: |
+            pytorch/dist/*.whl
+            # vision/dist/*.whl
+          retention-days: 30
+          if-no-files-found: error
 
       - name: Build TorchVision
         working-directory: ./vision
@@ -166,7 +178,7 @@ jobs:
         with:
           name: pytorch-macos-x86_64-py${{ matrix.python-version }}
           path: |
-            pytorch/dist/*.whl
+            # pytorch/dist/*.whl
             vision/dist/*.whl
           retention-days: 30
           if-no-files-found: error
