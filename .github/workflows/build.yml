@@ -100,12 +100,6 @@ jobs:
           LIBOMP_DIR=$(brew --prefix libomp)
 
           cat << EOF >> $GITHUB_ENV
-          LD=ld_classic
-          CC=clang
-          CXX=clang++
-          MKLROOT=/opt/intel/oneapi/mkl/latest
-          MKL_ROOT=/opt/intel/oneapi/mkl/latest
-          ONEAPI_ROOT=/opt/intel/oneapi
           MACOSX_DEPLOYMENT_TARGET=14.0
           DEBUG=0
           BUILD_TEST=0
@@ -129,10 +123,17 @@ jobs:
           USE_GFLAGS=OFF
           USE_GLOG=OFF
           USE_EXCEPTION_PTR=ON
+          ATEN_CPU_CAPABILITY=avx512
+          ONEAPI_ROOT=/opt/intel/oneapi
+          MKLROOT=/opt/intel/oneapi/mkl/latest
           OpenMP_ROOT=${LIBOMP_DIR}
-          CMAKE_PREFIX_PATH="${MKLROOT}:${CMAKE_PREFIX_PATH}"
           CMAKE_INSTALL_RPATH="@loader_path"
           CMAKE_BUILD_WITH_INSTALL_RPATH=ON
+          CMAKE_BUILD_RPATH_USE_ORIGIN=ON
+          CMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
+          CMAKE_SKIP_BUILD_RPATH=FALSE
+          CMAKE_BUILD_WITH_INSTALL_RPATH=FALSE
+          CMAKE_MACOSX_RPATH=TRUE
           CMAKE_BUILD_PARALLEL_LEVEL=${{ env.MAX_JOBS }}
           MAX_JOBS=${{ env.MAX_JOBS }}
           EOF
