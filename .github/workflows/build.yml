@@ -48,6 +48,7 @@ jobs:
       - name: Install system dependencies
         run: |
           brew install cmake ninja libomp
+          sudo find /usr/local/opt/libomp -type f
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -141,8 +142,8 @@ jobs:
           echo "found the following wheels:"
           find . -name "*.whl"
           echo "running delocate $LIBOMP_DIR"
-          find /usr/local/opt/libomp -type f
-          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:/usr/local/opt/libomp/lib" -v {}
+          sudo find /usr/local/opt/libomp -type f
+          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:/usr/local/opt/libomp/lib:/opt/intel/oneapi/compiler/latest/mac/compiler/lib" -v {}
           find . -name "*.whl"
           find . -name "*.whl" | xargs -I {} sudo delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
