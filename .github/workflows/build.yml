@@ -70,7 +70,7 @@ jobs:
           hdiutil attach basekit.dmg -nobrowse -quiet
 
           echo "Installing silently (only MKL component)..."
-          sudo /Volumes/m_BaseKit_p_2023.2.0.49398/bootstrapper.app/Contents/MacOS/bootstrapper \
+          /Volumes/m_BaseKit_p_2023.2.0.49398/bootstrapper.app/Contents/MacOS/bootstrapper \
             -s \
             --action install \
             --eula=accept \
