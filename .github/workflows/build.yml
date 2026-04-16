@@ -40,13 +40,6 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Download from another workflow run
-        uses: actions/download-artifact@v4
-        with:
-          run-id: 24393307889
-          artifact-ids: 6430987072
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -133,11 +126,18 @@ jobs:
           MAX_JOBS=${{ env.MAX_JOBS }}
           EOF
 
+      - name: Download from another workflow run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 24393307889
+          artifact-ids: 6430987072
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build PyTorch
         run: |
           find . -type f
           #wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
-          unzip pytorch-macos-x86_64-py3.11.zip
+          #unzip pytorch-macos-x86_64-py3.11.zip
 
           echo "found the following wheels:"
           find . -name "*.whl"
