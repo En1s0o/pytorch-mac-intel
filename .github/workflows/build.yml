@@ -36,7 +36,6 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        #python-version: ["3.10", "3.11", "3.12", "3.13"]
         python-version: ["3.11"]
       fail-fast: false
 
@@ -45,24 +44,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Checkout PyTorch source
-        uses: actions/checkout@v4
-        with:
-          repository: pytorch/pytorch
-          ref: ${{ needs.pytorch_tag.outputs.pytorch_tag }}
-          path: pytorch
-          submodules: recursive
-          fetch-depth: 1
-
-      - name: Checkout TorchVision source
-        uses: actions/checkout@v4
-        with:
-          repository: pytorch/vision
-          ref: ${{ needs.pytorch_tag.outputs.torchvision_tag }}
-          path: vision
-          submodules: recursive
-          fetch-depth: 1
 
       - name: Install system dependencies
         run: |
@@ -143,83 +124,25 @@ jobs:
         working-directory: ./pytorch
         run: |
           python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
+          curl -L -o pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
+          unzip pytorch-macos-x86_64-py3.11.zip
 
           echo "found the following wheels:"
-          find dist -name "*.whl"
-          echo "running delocate"
-          MKL_LIB="/opt/intel/oneapi/mkl/latest/lib"
-          COMPILER_LIB="/opt/intel/oneapi/compiler/latest/mac/compiler/lib"
-          find dist -name "*.whl" | xargs -I {} delocate-wheel --include-paths "${MKL_LIB}:${COMPILER_LIB}" --require-archs x86_64 -v {}
-          find dist -name "*.whl"
-          find dist -name "*.whl" | xargs -I {} delocate-listdeps {}
+          find . -name "*.whl"
+          echo "running delocate $DYLD_LIBRARY_PATH"
+          LIBOMP_DIR=$(brew --prefix libomp)
+          find $LIBOMP_DIR -type f
+          # DYLD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib:$LIBOMP_DIR"
+          find . -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:$LIBOMP_DIR" -v {}
+          find . -name "*.whl"
+          find . -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
 
-          python -m pip install dist/torch-*.whl --force-reinstall --no-deps
-
       - name: Upload wheels as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: pytorch-macos-x86_64-py${{ matrix.python-version }}
           path: |
-            pytorch/dist/*.whl
-            # vision/dist/*.whl
-          retention-days: 30
+            pytorch/*.whl
+          retention-days: 1
           if-no-files-found: error
-
-      - name: Build TorchVision
-        working-directory: ./vision
-        run: |
-          python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
-          python -m pip install dist/torchvision-*.whl --force-reinstall --no-deps
-
-      - name: Verify installation
-        run: |
-          python -c "
-          import platform
-          import torch
-          import torchvision
-          print('Python version:', platform.python_version())
-          print('Torch version:', torch.__version__)
-          print('TorchVision version:', torchvision.__version__)
-          print('CUDA available:', torch.cuda.is_available())
-          print('MPS available:', torch.backends.mps.is_available())
-          print('Build successful!')
-          "
-
-      - name: Upload wheels as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytorch-macos-x86_64-py${{ matrix.python-version }}
-          path: |
-            # pytorch/dist/*.whl
-            vision/dist/*.whl
-          retention-days: 30
-          if-no-files-found: error
-
-  release:
-    needs:
-      - pytorch_tag
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all wheels
-        uses: actions/download-artifact@v4
-        with:
-          path: wheels
-          pattern: pytorch-*
-          merge-multiple: true
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: pytorch-${{ needs.pytorch_tag.outputs.pytorch_tag }}-torchvision-${{ needs.pytorch_tag.outputs.torchvision_tag }}-macos-x86_64
-          name: PyTorch ${{ needs.pytorch_tag.outputs.pytorch_tag }} + TorchVision ${{ needs.pytorch_tag.outputs.torchvision_tag }} for macOS x86_64
-          body: |
-            Custom macOS x86_64 build of PyTorch ${{ needs.pytorch_tag.outputs.pytorch_tag }} with TorchVision ${{ needs.pytorch_tag.outputs.torchvision_tag }}.
-            - Built for Python 3.10, 3.11, 3.12, 3.13
-            - CPU + MKL only (no CUDA/MPS)
-          files: wheels/**/*
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
