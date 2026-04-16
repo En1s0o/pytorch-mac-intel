@@ -52,7 +52,7 @@ jobs:
       - name: Install Python build dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel delocate
-          python -m pip install -r pytorch/requirements.txt
+          python -m pip install -r requirements.txt
           python -m pip install pillow numpy
 
       - name: Install Intel oneAPI Base Toolkit (MKL) on macOS Intel
@@ -124,7 +124,7 @@ jobs:
         working-directory: ./pytorch
         run: |
           python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
-          curl -L -o pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
+          wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
           unzip pytorch-macos-x86_64-py3.11.zip
 
           echo "found the following wheels:"
