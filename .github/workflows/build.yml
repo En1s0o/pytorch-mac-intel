@@ -97,7 +97,7 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           LIBOMP_DIR=$(brew --prefix libomp)
-          tree /opt/intel/oneapi
+          find /opt/intel/oneapi -type f
 
           cat << EOF >> $GITHUB_ENV
           MACOSX_DEPLOYMENT_TARGET=14.0
