@@ -127,7 +127,6 @@ jobs:
           EOF
 
       - name: Build PyTorch
-        working-directory: ./pytorch
         run: |
           python setup.py bdist_wheel --plat-name=macosx_14_0_x86_64
           wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
@@ -149,6 +148,6 @@ jobs:
         with:
           name: pytorch-macos-x86_64-py${{ matrix.python-version }}
           path: |
-            pytorch/*.whl
+            *.whl
           retention-days: 1
           if-no-files-found: error
