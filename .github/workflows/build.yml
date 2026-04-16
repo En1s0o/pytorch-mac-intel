@@ -47,8 +47,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew install cmake ninja libomp
-          sudo find /usr/local/opt/libomp -type f
+          brew install cmake ninja
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,7 +83,6 @@ jobs:
       - name: Set build environment variables
         run: |
           source /opt/intel/oneapi/setvars.sh
-          LIBOMP_DIR=$(brew --prefix libomp)
           find /opt/intel/oneapi -type f
 
           cat << EOF >> $GITHUB_ENV
@@ -138,12 +136,10 @@ jobs:
         run: |
           find . -type f
 
-          LIBOMP_DIR=$(brew --prefix libomp)
           echo "found the following wheels:"
           find . -name "*.whl"
-          echo "running delocate $LIBOMP_DIR"
-          sudo find /usr/local/opt/libomp -type f
-          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:/usr/local/opt/libomp/lib:/opt/intel/oneapi/compiler/latest/mac/compiler/lib" -v {}
+          echo "running delocate"
+          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
           find . -name "*.whl"
           find . -name "*.whl" | xargs -I {} sudo delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
