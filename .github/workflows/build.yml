@@ -40,6 +40,13 @@ jobs:
       fail-fast: false
 
     steps:
+      - name: Download from another workflow run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 24393307889
+          artifact-ids: 6430987072
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -125,12 +132,6 @@ jobs:
           CMAKE_BUILD_PARALLEL_LEVEL=${{ env.MAX_JOBS }}
           MAX_JOBS=${{ env.MAX_JOBS }}
           EOF
-
-      - name: Download from another workflow run
-        uses: actions/download-artifact@v4
-        with:
-          artifact-ids: 6430987072
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build PyTorch
         run: |
