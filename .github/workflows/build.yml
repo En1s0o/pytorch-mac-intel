@@ -49,29 +49,14 @@ jobs:
         run: |
           brew install cmake ninja libomp
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
       - name: Install Python build dependencies
         run: |
-          cat <<EOF | tee requirements.txt
-          # Python dependencies required for development
-          
-          # Build System requirements
-          --requirement requirements-build.txt
-          
-          # Install / Development extra requirements
-          build[uv]  # for building sdist and wheel
-          expecttest>=0.3.0
-          filelock
-          fsspec>=0.8.5
-          hypothesis
-          jinja2
-          lintrunner ; platform_machine != "s390x"
-          networkx>=2.5.1
-          optree>=0.13.0
-          psutil
-          spin
-          sympy>=1.13.3
-          wheel
-          EOF
           python -m pip install --upgrade pip setuptools wheel delocate
           python -m pip install -r requirements.txt
           python -m pip install pillow numpy
