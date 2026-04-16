@@ -139,9 +139,9 @@ jobs:
           echo "found the following wheels:"
           find . -name "*.whl"
           echo "running delocate"
-          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
+          find . -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
           find . -name "*.whl"
-          find . -name "*.whl" | xargs -I {} sudo delocate-listdeps {}
+          find . -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
 
       - name: Upload wheels as artifacts
