@@ -126,9 +126,16 @@ jobs:
           MAX_JOBS=${{ env.MAX_JOBS }}
           EOF
 
+      - name: Download from another workflow run
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: 6430987072
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build PyTorch
         run: |
-          wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
+          find . -type f
+          #wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
           unzip pytorch-macos-x86_64-py3.11.zip
 
           echo "found the following wheels:"
