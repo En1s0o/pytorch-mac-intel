@@ -88,7 +88,6 @@ jobs:
             --action install \
             --eula=accept \
             --components="intel.oneapi.mac.mkl.devel" \
-            --continue-with-optional-error=yes \
             --log-dir=/tmp/oneapi_install_log
 
           echo "Unmounting DMG..."
@@ -98,7 +97,7 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           LIBOMP_DIR=$(brew --prefix libomp)
-          ls -l /opt/intel/oneapi/mkl/latest/lib/libmkl_*
+          tree /opt/intel/oneapi
 
           cat << EOF >> $GITHUB_ENV
           MACOSX_DEPLOYMENT_TARGET=14.0
@@ -131,8 +130,6 @@ jobs:
           MKL_USE_STATIC=ON
           MKL_LINK_STATIC=ON
           OpenMP_ROOT=${LIBOMP_DIR}
-          CMAKE_INSTALL_RPATH="@loader_path"
-          CMAKE_BUILD_WITH_INSTALL_RPATH=ON
           CMAKE_BUILD_RPATH_USE_ORIGIN=ON
           CMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
           CMAKE_SKIP_BUILD_RPATH=FALSE
@@ -150,7 +147,9 @@ jobs:
           echo "found the following wheels:"
           find dist -name "*.whl"
           echo "running delocate"
-          find dist -name "*.whl" | xargs -I {} delocate-wheel -v {}
+          MKL_LIB="/opt/intel/oneapi/mkl/latest/lib"
+          COMPILER_LIB="/opt/intel/oneapi/compiler/latest/mac/compiler/lib"
+          find dist -name "*.whl" | xargs -I {} delocate-wheel --include-paths "${MKL_LIB}:${COMPILER_LIB}" --require-archs x86_64 -v {}
           find dist -name "*.whl"
           find dist -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
