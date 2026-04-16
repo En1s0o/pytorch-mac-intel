@@ -136,18 +136,15 @@ jobs:
       - name: Build PyTorch
         run: |
           find . -type f
-          #wget --header="Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -O pytorch-macos-x86_64-py3.11.zip "https://github.com/En1s0o/pytorch-mac-intel/actions/runs/24393307889/artifacts/6430987072"
-          #unzip pytorch-macos-x86_64-py3.11.zip
 
+          LIBOMP_DIR=$(brew --prefix libomp)
           echo "found the following wheels:"
           find . -name "*.whl"
-          echo "running delocate $DYLD_LIBRARY_PATH"
-          LIBOMP_DIR=$(brew --prefix libomp)
-          find $LIBOMP_DIR -type f
-          # DYLD_LIBRARY_PATH="/opt/intel/oneapi/mkl/latest/lib:$LIBOMP_DIR"
-          find . -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:$LIBOMP_DIR" -v {}
+          echo "running delocate $LIBOMP_DIR"
+          find /usr/local/opt/libomp -type f
+          find . -name "*.whl" | xargs -I {} sudo delocate-wheel -L "/opt/intel/oneapi/mkl/latest/lib:/usr/local/opt/libomp/lib" -v {}
           find . -name "*.whl"
-          find . -name "*.whl" | xargs -I {} delocate-listdeps {}
+          find . -name "*.whl" | xargs -I {} sudo delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
 
       - name: Upload wheels as artifacts
