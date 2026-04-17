@@ -129,7 +129,7 @@ jobs:
           MKLROOT=/opt/intel/oneapi/mkl/latest
           MKL_USE_STATIC=ON
           MKL_LINK_STATIC=ON
-          OpenMP_ROOT=/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib
+          OpenMP_ROOT=/opt/intel/oneapi/compiler/2023.2.0/mac/compiler
           CMAKE_BUILD_RPATH_USE_ORIGIN=ON
           CMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
           CMAKE_SKIP_BUILD_RPATH=FALSE
@@ -147,7 +147,8 @@ jobs:
           echo "found the following wheels:"
           find dist -name "*.whl"
           echo "running delocate"
-          find dist -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
+          export DYLD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib
+          find dist -name "*.whl" | xargs -I {} delocate-wheel -v {}
           find dist -name "*.whl"
           find dist -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
