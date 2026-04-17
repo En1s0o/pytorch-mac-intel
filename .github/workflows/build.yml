@@ -70,7 +70,7 @@ jobs:
           hdiutil attach basekit.dmg -nobrowse -quiet
 
           echo "Installing silently (only MKL component)..."
-          /Volumes/m_BaseKit_p_2023.2.0.49398/bootstrapper.app/Contents/MacOS/bootstrapper \
+          sudo /Volumes/m_BaseKit_p_2023.2.0.49398/bootstrapper.app/Contents/MacOS/bootstrapper \
             -s \
             --action install \
             --eula=accept \
@@ -79,6 +79,16 @@ jobs:
 
           echo "Unmounting DMG..."
           hdiutil detach /Volumes/m_BaseKit_p_2023.2.0.49398 -quiet || true
+
+          ls -l /opt
+          ls -l /opt/intel
+          ls -l /opt/intel/oneapi
+          ls -l /opt/intel/oneapi/setvars.sh
+          sudo chown -R $(whoami) /opt/intel
+          ls -l /opt
+          ls -l /opt/intel
+          ls -l /opt/intel/oneapi
+          ls -l /opt/intel/oneapi/setvars.sh
 
       - name: Set build environment variables
         run: |
