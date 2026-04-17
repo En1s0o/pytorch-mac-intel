@@ -129,7 +129,7 @@ jobs:
           MKLROOT=/opt/intel/oneapi/mkl/latest
           MKL_USE_STATIC=ON
           MKL_LINK_STATIC=ON
-          OpenMP_ROOT=${LIBOMP_DIR}
+          OpenMP_ROOT=/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib
           CMAKE_BUILD_RPATH_USE_ORIGIN=ON
           CMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF
           CMAKE_SKIP_BUILD_RPATH=FALSE
