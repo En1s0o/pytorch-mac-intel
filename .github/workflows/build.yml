@@ -151,6 +151,6 @@ jobs:
         with:
           name: pytorch-macos-x86_64-py${{ matrix.python-version }}
           path: |
-            *.whl
+            pytorch-macos-x86_64-py3.11/*.whl
           retention-days: 1
           if-no-files-found: error
