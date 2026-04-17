@@ -141,7 +141,7 @@ jobs:
           find . -name "*.whl"
           echo "running delocate"
           DYLD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib
-          find . -name "*.whl" | xargs -I {} delocate-wheel -v {}
+          find . -name "*.whl" | xargs -I {} DYLD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib delocate-wheel -v {}
           find . -name "*.whl"
           find . -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
