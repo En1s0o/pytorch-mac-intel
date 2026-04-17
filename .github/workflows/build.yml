@@ -80,15 +80,8 @@ jobs:
           echo "Unmounting DMG..."
           hdiutil detach /Volumes/m_BaseKit_p_2023.2.0.49398 -quiet || true
 
-          ls -l /opt
-          ls -l /opt/intel
-          ls -l /opt/intel/oneapi
-          ls -l /opt/intel/oneapi/setvars.sh
+          sudo cp /opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib/* /opt/intel/oneapi/mkl/2023.2.0/lib/
           sudo chown -R $(whoami) /opt/intel
-          ls -l /opt
-          ls -l /opt/intel
-          ls -l /opt/intel/oneapi
-          ls -l /opt/intel/oneapi/setvars.sh
 
       - name: Set build environment variables
         run: |
