@@ -74,14 +74,12 @@ jobs:
             -s \
             --action install \
             --eula=accept \
-            --components=all \
+            --components="intel.oneapi.mac.mkl.devel:intel.oneapi.mac.openmp" \
             --log-dir=/tmp/oneapi_install_log
+          sudo chown -R $(whoami) /opt/intel
 
           echo "Unmounting DMG..."
           hdiutil detach /Volumes/m_BaseKit_p_2023.2.0.49398 -quiet || true
-
-          sudo cp /opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib/* /opt/intel/oneapi/mkl/2023.2.0/lib/
-          sudo chown -R $(whoami) /opt/intel
 
       - name: Set build environment variables
         run: |
@@ -142,7 +140,8 @@ jobs:
           echo "found the following wheels:"
           find . -name "*.whl"
           echo "running delocate"
-          find . -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
+          DYLD_LIBRARY_PATH=/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib
+          find . -name "*.whl" | xargs -I {} delocate-wheel -v {}
           find . -name "*.whl"
           find . -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
