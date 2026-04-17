@@ -74,7 +74,7 @@ jobs:
             -s \
             --action install \
             --eula=accept \
-            --components="intel.oneapi.mac.mkl.devel:intel.oneapi.mac.compiler" \
+            --components="intel.oneapi.mac.mkl.devel:intel.oneapi.mac.openmp" \
             --log-dir=/tmp/oneapi_install_log
 
           echo "Unmounting DMG..."
