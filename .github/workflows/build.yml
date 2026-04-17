@@ -66,7 +66,7 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew install cmake ninja libomp
+          brew install cmake ninja
 
       - name: Install Python build dependencies
         run: |
@@ -87,8 +87,9 @@ jobs:
             -s \
             --action install \
             --eula=accept \
-            --components="intel.oneapi.mac.mkl.devel" \
+            --components="intel.oneapi.mac.mkl.devel:intel.oneapi.mac.openmp" \
             --log-dir=/tmp/oneapi_install_log
+          sudo chown -R $(whoami) /opt/intel
 
           echo "Unmounting DMG..."
           hdiutil detach /Volumes/m_BaseKit_p_2023.2.0.49398 -quiet || true
@@ -96,7 +97,6 @@ jobs:
       - name: Set build environment variables
         run: |
           source /opt/intel/oneapi/setvars.sh
-          LIBOMP_DIR=$(brew --prefix libomp)
           find /opt/intel/oneapi -type f
 
           cat << EOF >> $GITHUB_ENV
@@ -147,9 +147,7 @@ jobs:
           echo "found the following wheels:"
           find dist -name "*.whl"
           echo "running delocate"
-          MKL_LIB="/opt/intel/oneapi/mkl/latest/lib"
-          COMPILER_LIB="/opt/intel/oneapi/compiler/latest/mac/compiler/lib"
-          find dist -name "*.whl" | xargs -I {} delocate-wheel --include-paths "${MKL_LIB}:${COMPILER_LIB}" --require-archs x86_64 -v {}
+          find dist -name "*.whl" | xargs -I {} delocate-wheel -L "/opt/intel/oneapi/mkl/2023.2.0/lib:/opt/intel/oneapi/compiler/2023.2.0/mac/compiler/lib" -v {}
           find dist -name "*.whl"
           find dist -name "*.whl" | xargs -I {} delocate-listdeps {}
           echo "Finished delocating wheels at $(date)"
@@ -163,7 +161,7 @@ jobs:
           path: |
             pytorch/dist/*.whl
             # vision/dist/*.whl
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: error
 
       - name: Build TorchVision
@@ -193,7 +191,7 @@ jobs:
           path: |
             # pytorch/dist/*.whl
             vision/dist/*.whl
-          retention-days: 30
+          retention-days: 7
           if-no-files-found: error
 
   release:
